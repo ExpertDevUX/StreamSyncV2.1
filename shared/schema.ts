@@ -1,41 +1,34 @@
-import { pgTable, text, serial, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, varchar, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const rooms = pgTable("rooms", {
   id: serial("id").primaryKey(),
-  roomId: varchar("room_id", { length: 255 }).unique().notNull(),
   name: text("name").notNull(),
-  password: text("password"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  password_hash: text("password_hash"),
+  created_at: timestamp("created_at").defaultNow(),
+  is_active: boolean("is_active").default(true),
+  expires_at: timestamp("expires_at"),
+  created_by: text("created_by")
 });
 
-export const messages = pgTable("messages", {
+export const room_participants = pgTable("room_participants", {
   id: serial("id").primaryKey(),
-  roomId: varchar("room_id", { length: 255 }).notNull(),
-  username: text("username").notNull(),
-  content: text("content").notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  room_id: text("room_id").notNull(),
+  user_id: text("user_id").notNull(),
+  user_name: text("user_name"),
+  last_seen: timestamp("last_seen").defaultNow()
 });
 
 export const callHistory = pgTable("call_history", {
   id: serial("id").primaryKey(),
-  roomId: varchar("room_id", { length: 255 }).notNull(),
-  username: text("username").notNull(),
-  duration: text("duration").notNull(),
-  startTime: timestamp("start_time").notNull(),
-  endTime: timestamp("end_time").notNull(),
+  room_id: text("room_id").notNull(),
+  user_id: text("user_id").notNull(),
+  joined_at: timestamp("joined_at").defaultNow(),
+  left_at: timestamp("left_at"),
+  duration_minutes: serial("duration_minutes") 
 });
 
-// Create schemas for validation
 export const insertRoomSchema = createInsertSchema(rooms);
-export const insertMessageSchema = createInsertSchema(messages);
-export const insertCallHistorySchema = createInsertSchema(callHistory);
-
-// Define types
 export type Room = typeof rooms.$inferSelect;
 export type InsertRoom = typeof rooms.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-export type CallHistory = typeof callHistory.$inferSelect;
-export type InsertCallHistory = typeof callHistory.$inferInsert;
