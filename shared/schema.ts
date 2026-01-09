@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const rooms = pgTable("rooms", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   password_hash: text("password_hash"),
   created_at: timestamp("created_at").defaultNow(),
