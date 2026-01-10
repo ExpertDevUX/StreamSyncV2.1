@@ -335,20 +335,16 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     pc.ontrack = (event) => {
       console.log("[v0] 🎥 *** RECEIVED TRACK from", peerId, "***")
       console.log("[v0] Track kind:", event.track.kind)
-      console.log("[v0] Track enabled:", event.track.enabled)
-      console.log("[v0] Track readyState:", event.track.readyState)
-      console.log("[v0] Streams:", event.streams.length)
-
-      remoteStream.addTrack(event.track)
-      console.log("[v0] Remote stream now has", remoteStream.getTracks().length, "tracks")
+      
+      event.streams[0].getTracks().forEach(track => {
+        remoteStream.addTrack(track)
+      })
 
       const peer = peersRef.current.get(peerId)
       if (peer) {
         peer.stream = remoteStream
         peersRef.current.set(peerId, peer)
-        // Force re-render by creating new Map
         setPeers(new Map(peersRef.current))
-        console.log("[v0] ✅ Updated peer", peerId, "with remote stream")
       }
     }
 
