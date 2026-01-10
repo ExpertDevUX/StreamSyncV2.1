@@ -103,10 +103,25 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         }
 
         // Get local media
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const constraints = {
           video: roomType === "voice" ? false : { width: 1280, height: 720 },
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        })
+        }
+
+        let stream: MediaStream
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints)
+        } catch (err) {
+          console.error("Media error:", err)
+          if (roomType !== "voice" && err instanceof Error && (err.name === "NotFoundError" || err.name === "NotAllowedError")) {
+            // Fallback to audio only if camera fails
+            stream = await navigator.mediaDevices.getUserMedia({ audio: constraints.audio })
+            setIsVideoEnabled(false)
+            toast({ title: "Camera Not Found", description: "Joining with audio only." })
+          } else {
+            throw err
+          }
+        }
 
         if (!isActive) {
           stream.getTracks().forEach((track) => track.stop())

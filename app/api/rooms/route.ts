@@ -48,6 +48,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       id: room.id,
       name: room.name,
+      type: room.type,
       hasPassword: !!room.password_hash,
       createdAt: room.created_at,
       expiresAt: room.expires_at,

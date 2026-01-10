@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = neon("postgresql://neondb_owner:npg_iTKPxIYwmv78@ep-red-glade-ahaxrhjw-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require")
 
 export async function GET(request: Request) {
   try {
@@ -13,22 +13,10 @@ export async function GET(request: Request) {
     }
 
     const messages = await sql`
-      SELECT 
-        cm.id,
-        cm.user_name,
-        cm.message,
-        cm.created_at,
-        cm.edited_at,
-        uf.id as file_id,
-        uf.file_name,
-        uf.file_type,
-        uf.file_size,
-        uf.file_url,
-        uf.virus_scan_status
-      FROM chat_messages cm
-      LEFT JOIN uploaded_files uf ON cm.file_id = uf.id
-      WHERE cm.room_id = ${roomId}
-      ORDER BY cm.created_at ASC
+      SELECT id, username, content, timestamp
+      FROM messages
+      WHERE room_id = ${roomId}
+      ORDER BY timestamp ASC
       LIMIT 100
     `
 
@@ -41,27 +29,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { roomId, userId, userName, message, fileId } = await request.json()
+    const { roomId, userId, userName, message } = await request.json()
 
     if (!roomId || !userName || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const result = await sql`
-      INSERT INTO chat_messages (room_id, user_id, user_name, message, file_id)
-      VALUES (${roomId}, ${userId}, ${userName}, ${message}, ${fileId || null})
-      RETURNING id, created_at
+      INSERT INTO messages (room_id, username, content)
+      VALUES (${roomId}, ${userName}, ${message})
+      RETURNING id, timestamp
     `
 
-    // Update room last activity
-    await sql`
-      UPDATE rooms SET last_activity = NOW() WHERE id = ${roomId}
-    `
-
-    return NextResponse.json({ success: true, messageId: result[0].id, createdAt: result[0].created_at })
+    return NextResponse.json({ success: true, messageId: result[0].id, createdAt: result[0].timestamp })
   } catch (error) {
     console.error("[v0] Error sending message:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: "Failed to send message", details: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
   }
 }

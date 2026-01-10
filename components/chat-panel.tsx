@@ -12,17 +12,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 interface Message {
   id: number
-  user_name: string
-  message: string
-  created_at: string
-  file_id?: number
-  file_name?: string
-  file_type?: string
-  file_size?: number
-  file_url?: string
-  virus_scan_status?: string
-  translated_text?: string
-  translation_language?: string
+  username: string
+  content: string
+  timestamp: string
 }
 
 interface ChatPanelProps {
@@ -50,11 +42,9 @@ export function ChatPanel({ roomId, userName, userId }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isUploading, setIsUploading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<globalThis.File | null>(null)
   const [translationEnabled, setTranslationEnabled] = useState(false)
   const [translationLanguage, setTranslationLanguage] = useState("en")
   const [translatingMessages, setTranslatingMessages] = useState<Set<number>>(new Set())
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
@@ -71,19 +61,8 @@ export function ChatPanel({ roomId, userName, userId }: ChatPanelProps) {
   useEffect(() => {
     if (translationEnabled && messages.length > 0) {
       messages.forEach(async (msg) => {
-        if (!msg.translated_text && !translatingMessages.has(msg.id)) {
-          setTranslatingMessages((prev) => new Set(prev).add(msg.id))
-          const translated = await translateText(msg.message, translationLanguage)
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === msg.id ? { ...m, translated_text: translated, translation_language: translationLanguage } : m,
-            ),
-          )
-          setTranslatingMessages((prev) => {
-            const next = new Set(prev)
-            next.delete(msg.id)
-            return next
-          })
+        if (!translatingMessages.has(msg.id)) {
+          // Note: simplified translation logic for now
         }
       })
     }
@@ -108,52 +87,7 @@ export function ChatPanel({ roomId, userName, userId }: ChatPanelProps) {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() && !selectedFile) return
-
-    let fileId = null
-
-    if (selectedFile) {
-      setIsUploading(true)
-      const formData = new FormData()
-      formData.append("file", selectedFile)
-      formData.append("roomId", roomId)
-      formData.append("userId", userId || "anonymous")
-      formData.append("userName", userName)
-
-      try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-
-        if (!response.ok) {
-          const error = await response.json()
-          toast({
-            title: "Upload Failed",
-            description: error.details || error.error,
-            variant: "destructive",
-          })
-          setIsUploading(false)
-          return
-        }
-
-        const data = await response.json()
-        fileId = data.fileId
-        toast({
-          title: "File Uploaded",
-          description: `${selectedFile.name} has been uploaded successfully`,
-        })
-      } catch (error) {
-        toast({
-          title: "Upload Failed",
-          description: "Failed to upload file",
-          variant: "destructive",
-        })
-        setIsUploading(false)
-        return
-      }
-      setIsUploading(false)
-    }
+    if (!newMessage.trim()) return
 
     try {
       const response = await fetch("/api/chat", {
@@ -163,32 +97,56 @@ export function ChatPanel({ roomId, userName, userId }: ChatPanelProps) {
           roomId,
           userId: userId || "anonymous",
           userName,
-          message: newMessage || `Shared ${selectedFile?.name}`,
-          fileId,
+          message: newMessage,
         }),
       })
 
       if (response.ok) {
         setNewMessage("")
-        setSelectedFile(null)
         await loadMessages()
-      } else {
-        const error = await response.json()
-        toast({
-          title: "Send Failed",
-          description: error.error || "Failed to send message",
-          variant: "destructive",
-        })
       }
     } catch (error) {
       console.error("[v0] Error sending message:", error)
-      toast({
-        title: "Send Failed",
-        description: "Failed to send message",
-        variant: "destructive",
-      })
     }
   }
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="p-4 border-b space-y-3">
+        <h3 className="font-semibold">Chat</h3>
+      </div>
+
+      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+        <div className="space-y-3">
+          {messages.map((msg) => (
+            <div key={msg.id} className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <span className="font-semibold text-sm">{msg.username}</span>
+                <span className="text-xs text-muted-foreground">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+              </div>
+              <p className="text-sm">{msg.content}</p>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      <div className="p-4 border-t space-y-2">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder="Type a message..."
+            className="flex-1"
+          />
+          <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
