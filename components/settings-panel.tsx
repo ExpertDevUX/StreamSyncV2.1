@@ -21,8 +21,34 @@ export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: Se
   const [captionLanguage, setCaptionLanguage] = useState("en-US")
   const [translateEnabled, setTranslateEnabled] = useState(false)
   const [translateLanguage, setTranslateLanguage] = useState("en")
+  const [roomType, setRoomType] = useState<string>("video")
   const [endCallForAll, setEndCallForAll] = useState(false)
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (roomId) {
+      const savedType = localStorage.getItem(`room_${roomId}_type`)
+      if (savedType) {
+        setRoomType(savedType)
+      }
+    }
+  }, [roomId])
+
+  const handleRoomTypeChange = async (type: string) => {
+    setRoomType(type)
+    localStorage.setItem(`room_${roomId}_type`, type)
+    
+    try {
+      await fetch("/api/rooms", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: roomId, type }),
+      })
+      toast({ title: "Room Type Updated", description: `Call type changed to ${type}` })
+    } catch (error) {
+      console.error("Error updating room type:", error)
+    }
+  }
 
   useEffect(() => {
     if (isOwner && roomId) {
@@ -172,6 +198,28 @@ export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: Se
                     <p className="text-xs text-muted-foreground">Kick all users when you leave</p>
                   </div>
                   <Switch id="end-for-all" checked={endCallForAll} onCheckedChange={handleEndForAllChange} />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Room Type</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Change the mode of this meeting</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["voice", "video", "team", "group"].map((type) => (
+                    <Button
+                      key={type}
+                      variant={roomType === type ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleRoomTypeChange(type)}
+                      className="capitalize"
+                    >
+                      {type}
+                    </Button>
+                  ))}
                 </div>
               </div>
 

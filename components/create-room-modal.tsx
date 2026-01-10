@@ -23,6 +23,7 @@ export function CreateRoomModal() {
   const [roomName, setRoomName] = useState("")
   const [isPrivate, setIsPrivate] = useState(false)
   const [password, setPassword] = useState("")
+  const [roomType, setRoomType] = useState("video")
   const [open, setOpen] = useState(false)
 
   const handleCreate = (e: React.FormEvent) => {
@@ -40,6 +41,9 @@ export function CreateRoomModal() {
       roomPasswords[slug] = password
       localStorage.setItem("roomPasswords", JSON.stringify(roomPasswords))
     }
+
+    // Save room type locally for owner
+    localStorage.setItem(`room_${slug}_type`, roomType)
 
     setOpen(false)
     router.push(`/room/${slug}`)
@@ -77,6 +81,24 @@ export function CreateRoomModal() {
               onChange={(e) => setRoomName(e.target.value)}
               className="h-11"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Call Type</Label>
+            <div className="flex flex-wrap gap-2 py-1">
+              {["voice", "video", "team", "group"].map((type) => (
+                <Button
+                  key={type}
+                  type="button"
+                  variant={roomType === type ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setRoomType(type)}
+                  className="capitalize"
+                >
+                  {type}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-between space-x-2 py-2">

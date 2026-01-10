@@ -9,7 +9,8 @@ export const rooms = pgTable("rooms", {
   created_at: timestamp("created_at").defaultNow(),
   is_active: boolean("is_active").default(true),
   expires_at: timestamp("expires_at"),
-  created_by: text("created_by")
+  created_by: text("created_by"),
+  type: text("type").default("video"), // voice, video, team, group
 });
 
 export const room_participants = pgTable("room_participants", {

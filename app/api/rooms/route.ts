@@ -6,7 +6,7 @@ const sql = neon("postgresql://neondb_owner:npg_iTKPxIYwmv78@ep-red-glade-ahaxrh
 
 export async function POST(request: Request) {
   try {
-    const { id, name, password, userId } = await request.json()
+    const { id, name, password, userId, type } = await request.json()
 
     let passwordHash = null
     if (password) {
@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     }
 
     await sql`
-      INSERT INTO rooms (id, name, password_hash, created_by)
-      VALUES (${id}, ${name}, ${passwordHash}, ${userId})
+      INSERT INTO rooms (id, name, password_hash, created_by, type)
+      VALUES (${id}, ${name}, ${passwordHash}, ${userId}, ${type || 'video'})
     `
 
     return NextResponse.json({ success: true, roomId: id })
@@ -59,27 +59,17 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PATCH(request: Request) {
   try {
-    const { id, name, userId } = await request.json()
-
-    // Check if room exists
-    const existing = await sql`
-      SELECT id FROM rooms WHERE id = ${id}
+    const { id, type } = await request.json()
+    await sql`
+      UPDATE rooms 
+      SET type = ${type}
+      WHERE id = ${id}
     `
-
-    if (existing.length === 0) {
-      // Create room automatically
-      await sql`
-        INSERT INTO rooms (id, name, password_hash, created_by)
-        VALUES (${id}, ${name || id}, NULL, ${userId})
-        ON CONFLICT (id) DO NOTHING
-      `
-    }
-
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Error ensuring room exists:", error)
-    return NextResponse.json({ error: "Failed to ensure room exists" }, { status: 500 })
+    console.error("[v0] Error updating room type:", error)
+    return NextResponse.json({ error: "Failed to update room type" }, { status: 500 })
   }
 }

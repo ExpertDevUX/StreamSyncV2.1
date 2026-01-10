@@ -58,6 +58,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   const [userName, setUserName] = useState("")
   const [participantCount, setParticipantCount] = useState(1)
   const [isOwner, setIsOwner] = useState(false)
+  const [roomType, setRoomType] = useState<string>("video")
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
@@ -91,16 +92,19 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
     const initializeRoom = async () => {
       try {
-        // Create room if needed
-        await fetch("/api/rooms", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: roomId, name: roomId, userId: userIdRef.current }),
-        })
+        const roomRes = await fetch(`/api/rooms?roomId=${roomId}`)
+        if (roomRes.ok) {
+          const roomData = await roomRes.json()
+          setRoomType(roomData.type || "video")
+          
+          if (roomData.type === "voice") {
+            setIsVideoEnabled(false)
+          }
+        }
 
         // Get local media
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 1280, height: 720 },
+          video: roomType === "voice" ? false : { width: 1280, height: 720 },
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         })
 
