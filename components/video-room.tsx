@@ -56,6 +56,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [captionLanguage, setCaptionLanguage] = useState("en-US")
   const [userName, setUserName] = useState("")
+  const [hasSetUsername, setHasSetUsername] = useState(false)
   const [participantCount, setParticipantCount] = useState(1)
   const [isOwner, setIsOwner] = useState(false)
   const [roomType, setRoomType] = useState<string>("video")
@@ -69,14 +70,6 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   useEffect(() => {
     setMounted(true)
     
-    // Use session-based persistence for the user ID to prevent duplicates on tab reload
-    // while still allowing unique IDs for different browser sessions/tabs if needed.
-    // However, the user wants to avoid duplicate users when opening a new tab.
-    // If they open a new tab, they usually want to be the same user OR a different one.
-    // Usually, in these apps, a tab is a unique participant.
-    // If the user is seeing "duplicates", it might be because the server isn't cleaning up 
-    // old sessions fast enough or the user ID is being regenerated on every refresh.
-    
     const sessionUserId = sessionStorage.getItem("video_room_user_id")
     if (sessionUserId) {
       userIdRef.current = sessionUserId
@@ -86,9 +79,11 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
       sessionStorage.setItem("video_room_user_id", newUserId)
     }
 
-    const storedName = localStorage.getItem("userName") || `User-${Math.floor(Math.random() * 1000)}`
-    setUserName(storedName)
-    localStorage.setItem("userName", storedName)
+    const storedName = localStorage.getItem("userName")
+    if (storedName) {
+      setUserName(storedName)
+      setHasSetUsername(true)
+    }
   }, [])
 
   useEffect(() => {
@@ -103,7 +98,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   }, [roomId])
 
   useEffect(() => {
-    if (!isAuthenticated || !userName || !mounted) return
+    if (!isAuthenticated || !userName || !mounted || !hasSetUsername) return
 
     let isActive = true
 
@@ -608,6 +603,49 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         onCancel={() => router.push("/")}
         roomId={roomId}
       />
+    )
+  }
+
+  if (!hasSetUsername) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-6 space-y-4 shadow-xl border-primary/20">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">Join Meeting</h1>
+            <p className="text-muted-foreground">Enter your nickname to join the room</p>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="nickname" className="text-sm font-medium leading-none">
+                Nickname
+              </label>
+              <input
+                id="nickname"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Enter your name..."
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && userName.trim()) {
+                    localStorage.setItem("userName", userName.trim())
+                    setHasSetUsername(true)
+                  }
+                }}
+              />
+            </div>
+            <Button
+              className="w-full h-11 text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+              disabled={!userName.trim()}
+              onClick={() => {
+                localStorage.setItem("userName", userName.trim())
+                setHasSetUsername(true)
+              }}
+            >
+              Join Room
+            </Button>
+          </div>
+        </Card>
+      </div>
     )
   }
 
