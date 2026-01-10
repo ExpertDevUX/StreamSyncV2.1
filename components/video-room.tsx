@@ -754,8 +754,6 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             <SettingsPanel
               onClose={() => setShowSettings(false)}
               onCaptionsChange={handleCaptionsChange}
-              captionsEnabled={captionsEnabled}
-              captionLanguage={captionLanguage}
               isOwner={isOwner}
               roomId={roomId}
             />
@@ -764,7 +762,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
         {/* Captions Overlay */}
         {captionsEnabled && (
-          <CaptionsOverlay isActive={captionsEnabled} language={captionLanguage} localStream={localStreamRef.current} />
+          <CaptionsOverlay enabled={captionsEnabled} language={captionLanguage} stream={localStreamRef.current || undefined} />
         )}
       </main>
 
