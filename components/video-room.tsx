@@ -68,7 +68,24 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
   useEffect(() => {
     setMounted(true)
-    userIdRef.current = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    // Use session-based persistence for the user ID to prevent duplicates on tab reload
+    // while still allowing unique IDs for different browser sessions/tabs if needed.
+    // However, the user wants to avoid duplicate users when opening a new tab.
+    // If they open a new tab, they usually want to be the same user OR a different one.
+    // Usually, in these apps, a tab is a unique participant.
+    // If the user is seeing "duplicates", it might be because the server isn't cleaning up 
+    // old sessions fast enough or the user ID is being regenerated on every refresh.
+    
+    const sessionUserId = sessionStorage.getItem("video_room_user_id")
+    if (sessionUserId) {
+      userIdRef.current = sessionUserId
+    } else {
+      const newUserId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      userIdRef.current = newUserId
+      sessionStorage.setItem("video_room_user_id", newUserId)
+    }
+
     const storedName = localStorage.getItem("userName") || `User-${Math.floor(Math.random() * 1000)}`
     setUserName(storedName)
     localStorage.setItem("userName", storedName)
