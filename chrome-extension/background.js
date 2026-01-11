@@ -3,9 +3,9 @@ const chrome = window.chrome // Declare the chrome variable
 chrome.runtime.onInstalled.addListener(() => {
   console.log("[ConnectNow] Extension installed")
 
-  // Set default settings
+  // Set default settings - will be updated by the user or dynamically
   chrome.storage.sync.set({
-    baseUrl: "https://v0-connect-now-8m.vercel.app",
+    baseUrl: "", 
     notifications: true,
   })
 })

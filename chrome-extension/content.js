@@ -45,8 +45,10 @@ window.addEventListener("message", (event) => {
       case "COPY_LINK":
         if (event.data.text) {
           navigator.clipboard.writeText(event.data.text).then(() => {
-            sendResponse({ success: true, message: "Link copied to clipboard" })
-          })
+            console.log("[ConnectNow] Link copied via extension");
+          }).catch(err => {
+            console.error("[ConnectNow] Failed to copy link:", err);
+          });
         }
         break
 

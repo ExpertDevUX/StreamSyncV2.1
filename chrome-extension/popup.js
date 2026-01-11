@@ -1,12 +1,16 @@
 const chrome = window.chrome
 
-// Get the base URL from storage or use default
-let baseUrl = "https://v0-connect-now-8m.vercel.app"
+// Get the base URL from storage or use current origin as fallback
+let baseUrl = window.location.origin.includes('chrome-extension') ? "" : window.location.origin;
 
 // Load saved settings
 chrome.storage.sync.get(["baseUrl", "recentRooms"], (result) => {
   if (result.baseUrl) {
-    baseUrl = result.baseUrl
+    baseUrl = result.baseUrl;
+  } else if (!baseUrl) {
+    // If we're in the popup and don't have a baseUrl, we should probably set one
+    // In a real scenario, this would be the deployed app URL
+    baseUrl = "https://" + window.location.hostname; // Fallback
   }
   if (result.recentRooms) {
     displayRecentRooms(result.recentRooms)

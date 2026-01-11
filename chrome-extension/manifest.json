@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.vercel.app/*", "*://*.vercel.dev/*", "http://localhost:*/*", "https://localhost:*/*"],
+      "matches": ["*://*.replit.dev/*", "*://*.vercel.app/*", "http://localhost:*/*"],
       "js": ["content.js"],
       "run_at": "document_end"
     }
@@ -27,5 +27,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "host_permissions": ["*://*.vercel.app/*"]
+  "host_permissions": ["*://*.replit.dev/*", "*://*.vercel.app/*"]
 }
