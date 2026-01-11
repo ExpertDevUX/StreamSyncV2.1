@@ -317,7 +317,9 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     // Low latency configuration
     if (pc.getTransceivers) {
       pc.getTransceivers().forEach(transceiver => {
-        if (transceiver.receiver.playoutDelayHint !== undefined) {
+        // @ts-ignore - playoutDelayHint is a valid but potentially untyped property in some environments
+        if (transceiver.receiver && 'playoutDelayHint' in transceiver.receiver) {
+          // @ts-ignore
           transceiver.receiver.playoutDelayHint = 0;
         }
       });
