@@ -576,10 +576,13 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   }
 
   const getGridLayout = (count: number) => {
-    if (count === 1) return "grid-cols-1"
-    if (count === 2) return "grid-cols-2"
-    if (count === 3 || count === 4) return "grid-cols-2"
-    return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+    if (count === 1) return "flex items-center justify-center h-full max-h-[calc(100vh-160px)]"
+    return cn(
+      "h-full grid gap-2 md:gap-4 auto-rows-fr max-h-[calc(100vh-160px)]",
+      count === 2 ? "grid-cols-2" : 
+      count <= 4 ? "grid-cols-2" : 
+      "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+    )
   }
 
   if (isCheckingPassword) {
@@ -710,15 +713,19 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
       <main className="flex-1 flex flex-col md:flex-row relative overflow-hidden min-h-0">
         {/* Video grid container */}
-        <div className="flex-1 p-2 sm:p-4 overflow-hidden relative">
+        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-hidden relative flex items-center justify-center min-h-0">
           <div
             className={cn(
-              "h-full grid gap-2 md:gap-4 auto-rows-fr",
+              "w-full max-w-5xl mx-auto h-full",
+              totalParticipants === 1 ? "flex items-center justify-center" : "grid",
               getGridLayout(totalParticipants),
             )}
           >
             {/* Local video */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg h-full max-h-[40vh] md:max-h-none aspect-video md:aspect-auto mx-auto w-full">
+            <Card className={cn(
+              "relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg border-primary/10 w-full h-full object-contain",
+              totalParticipants === 1 ? "max-w-4xl aspect-video" : "aspect-video"
+            )}>
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -745,7 +752,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             {Array.from(peers.values()).map((peer) => (
               <Card
                 key={peer.id}
-                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg h-full max-h-[40vh] md:max-h-none aspect-video md:aspect-auto mx-auto w-full"
+                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg border-primary/10 aspect-video w-full h-full object-contain"
               >
                 {peer.stream && peer.stream.getTracks().length > 0 ? (
                   <video
