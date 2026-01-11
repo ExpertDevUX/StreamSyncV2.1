@@ -605,6 +605,10 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     )
   }
 
+  if (!mounted) {
+    return <div className="min-h-screen bg-background" />
+  }
+
   if (isCheckingPassword) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -668,10 +672,6 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         </Card>
       </div>
     )
-  }
-
-  if (!mounted) {
-    return <div className="min-h-screen bg-background" />
   }
 
   const totalParticipants = peers.size + 1
