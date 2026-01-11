@@ -59,7 +59,6 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [isCheckingPassword, setIsCheckingPassword] = useState(true)
   const [showChat, setShowChat] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [captionLanguage, setCaptionLanguage] = useState("en-US")
   const [userName, setUserName] = useState("")
@@ -671,7 +670,9 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     )
   }
 
-  if (!mounted) return null
+  if (!mounted) {
+    return <div className="min-h-screen bg-background" />
+  }
 
   const totalParticipants = peers.size + 1
 

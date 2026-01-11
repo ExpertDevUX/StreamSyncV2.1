@@ -10,34 +10,22 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
 
 interface SettingsPanelProps {
-  onClose: () => void
   onCaptionsChange: (enabled: boolean, language: string) => void
   isOwner?: boolean
   roomId?: string
+  roomType?: string
+  onEndForAll?: (enabled: boolean) => void
 }
 
-export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: SettingsPanelProps) {
+export function SettingsPanel({ onCaptionsChange, isOwner, roomId, roomType, onEndForAll }: SettingsPanelProps) {
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [captionLanguage, setCaptionLanguage] = useState("en-US")
   const [translateEnabled, setTranslateEnabled] = useState(false)
   const [translateLanguage, setTranslateLanguage] = useState("en")
-  const [roomType, setRoomType] = useState<string>("video")
   const [endCallForAll, setEndCallForAll] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    if (roomId) {
-      const savedType = localStorage.getItem(`room_${roomId}_type`)
-      if (savedType) {
-        setRoomType(savedType)
-      }
-    }
-  }, [roomId])
-
   const handleRoomTypeChange = async (type: string) => {
-    setRoomType(type)
-    localStorage.setItem(`room_${roomId}_type`, type)
-    
     try {
       await fetch("/api/rooms", {
         method: "PATCH",
@@ -64,6 +52,7 @@ export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: Se
     if (roomId) {
       localStorage.setItem(`room_${roomId}_endForAll`, enabled.toString())
     }
+    onEndForAll?.(enabled)
     toast({
       title: enabled ? "End Meeting for All Enabled" : "End Meeting for All Disabled",
       description: enabled
@@ -92,22 +81,13 @@ export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: Se
   }
 
   return (
-    <div className="flex flex-col h-full bg-background border-l">
-      <div className="p-4 border-b flex items-center justify-between">
-        <h3 className="font-semibold">Settings</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Close
-        </Button>
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
-          {/* Captions Section */}
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-medium mb-2">Live Captions</h4>
-              <p className="text-sm text-muted-foreground mb-4">Enable real-time speech-to-text captions</p>
-            </div>
+    <div className="space-y-6">
+      {/* Captions Section */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="font-medium mb-1">Live Captions</h4>
+          <p className="text-sm text-muted-foreground">Enable real-time speech-to-text captions</p>
+        </div>
 
             <div className="flex items-center justify-between">
               <Label htmlFor="captions">Enable Captions</Label>
@@ -227,18 +207,16 @@ export function SettingsPanel({ onClose, onCaptionsChange, isOwner, roomId }: Se
             </>
           )}
 
-          {/* Room Info */}
-          <div className="space-y-2">
-            <h4 className="font-medium">Room Information</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>• Chat history saved for 60 days</p>
-              <p>• Call history tracked automatically</p>
-              <p>• Files scanned with VirusTotal</p>
-              <p>• Maximum file size: 5MB</p>
-            </div>
-          </div>
+      {/* Room Info */}
+      <div className="space-y-2 pt-2">
+        <h4 className="font-medium">Room Information</h4>
+        <div className="text-sm text-muted-foreground space-y-1">
+          <p>• Chat history saved for 60 days</p>
+          <p>• Call history tracked automatically</p>
+          <p>• Files scanned with VirusTotal</p>
+          <p>• Maximum file size: 5MB</p>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
