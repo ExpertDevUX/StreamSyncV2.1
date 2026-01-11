@@ -26,6 +26,13 @@ import { ChatPanel } from "@/components/chat-panel"
 import { SettingsPanel } from "@/components/settings-panel"
 import { CaptionsOverlay } from "@/components/captions-overlay"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { useTheme } from "next-themes"
 
 interface VideoRoomProps {
@@ -815,21 +822,6 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
           </SheetContent>
         </Sheet>
 
-        {/* Settings Sheet */}
-        <Sheet open={showSettings} onOpenChange={setShowSettings}>
-          <SheetContent
-            side="bottom"
-            className="h-[80vh] max-h-[600px] md:h-auto md:max-h-none md:side-right p-0 rounded-t-2xl md:rounded-none"
-          >
-            <SettingsPanel
-              onClose={() => setShowSettings(false)}
-              onCaptionsChange={handleCaptionsChange}
-              isOwner={isOwner}
-              roomId={roomId}
-            />
-          </SheetContent>
-        </Sheet>
-
         {/* Captions Overlay */}
         {captionsEnabled && (
           <CaptionsOverlay enabled={captionsEnabled} language={captionLanguage} stream={localStreamRef.current || undefined} />
@@ -879,14 +871,32 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
           >
             <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowSettings(!showSettings)}
-            className="h-12 w-12 sm:h-14 sm:w-14 md:h-12 md:w-12 rounded-full active:scale-95 transition-transform"
-          >
-            <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 sm:h-14 sm:w-14 md:h-12 md:w-12 rounded-full active:scale-95 transition-transform"
+              >
+                <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 bg-background border-border">
+              <DialogHeader className="p-4 border-b">
+                <DialogTitle>Meeting Settings</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <SettingsPanel
+                  onClose={() => {}}
+                  onCaptionsChange={handleCaptionsChange}
+                  isOwner={isOwner}
+                  roomId={roomId}
+                  roomType={roomType}
+                  onEndForAll={handleEndForAll}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button
             variant="destructive"
             size="icon"
