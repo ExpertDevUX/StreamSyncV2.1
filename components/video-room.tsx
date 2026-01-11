@@ -577,11 +577,9 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
   const getGridLayout = (count: number) => {
     if (count === 1) return "grid-cols-1"
-    if (count === 2) return "grid-cols-1 min-[480px]:grid-cols-2"
+    if (count === 2) return "grid-cols-2"
     if (count === 3 || count === 4) return "grid-cols-2"
-    if (count <= 6) return "grid-cols-2 lg:grid-cols-3"
-    if (count <= 9) return "grid-cols-2 md:grid-cols-3"
-    return "grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+    return "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
   }
 
   if (isCheckingPassword) {
@@ -710,17 +708,17 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         </div>
       </header>
 
-      <main className="flex-1 flex relative overflow-hidden min-h-0">
+      <main className="flex-1 flex flex-col md:flex-row relative overflow-hidden min-h-0">
         {/* Video grid container */}
-        <div className="flex-1 p-1 sm:p-2 md:p-4 lg:p-6 overflow-y-auto overscroll-contain">
+        <div className="flex-1 p-2 sm:p-4 overflow-hidden relative">
           <div
             className={cn(
-              "h-full grid gap-1 sm:gap-2 md:gap-4 auto-rows-fr content-start",
+              "h-full grid gap-2 md:gap-4 auto-rows-fr",
               getGridLayout(totalParticipants),
             )}
           >
             {/* Local video */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg min-h-[180px] sm:min-h-[240px] md:min-h-0">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg h-full max-h-[40vh] md:max-h-none aspect-video md:aspect-auto mx-auto w-full">
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -747,7 +745,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             {Array.from(peers.values()).map((peer) => (
               <Card
                 key={peer.id}
-                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg min-h-[180px] sm:min-h-[240px] md:min-h-0"
+                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg h-full max-h-[40vh] md:max-h-none aspect-video md:aspect-auto mx-auto w-full"
               >
                 {peer.stream && peer.stream.getTracks().length > 0 ? (
                   <video
