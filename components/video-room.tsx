@@ -237,6 +237,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             type: "heartbeat",
             roomId,
             userId: userIdRef.current,
+            data: { userName },
           }),
         })
 
@@ -310,6 +311,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         { urls: "stun:stun3.l.google.com:19302" },
         { urls: "stun:stun4.l.google.com:19302" },
       ],
+      iceCandidatePoolSize: 10,
     })
 
     console.log("[v0] 📹 Adding local tracks to peer connection for", peerId)

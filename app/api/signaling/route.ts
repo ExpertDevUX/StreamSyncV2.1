@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       case "heartbeat": {
         await sql`
           UPDATE room_participants 
-          SET last_seen = NOW() 
+          SET last_seen = NOW(), user_name = COALESCE(${data?.userName}, user_name)
           WHERE room_id = ${roomId} AND user_id = ${userId}
         `
 
