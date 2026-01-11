@@ -30,6 +30,19 @@ export const callHistory = pgTable("call_history", {
   duration_minutes: integer("duration_minutes").default(0) 
 });
 
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  room_id: text("room_id").notNull(),
+  username: text("username").notNull(),
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  is_file: boolean("is_file").default(false),
+  file_url: text("file_url"),
+  vt_scan_id: text("vt_scan_id"),
+  vt_status: text("vt_status").default("none"), // none, pending, clean, malicious
+  vt_score: integer("vt_score")
+});
+
 export const insertRoomSchema = createInsertSchema(rooms);
 export type Room = typeof rooms.$inferSelect;
 export type InsertRoom = typeof rooms.$inferInsert;
