@@ -314,6 +314,15 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
       iceCandidatePoolSize: 10,
     })
 
+    // Low latency configuration
+    if (pc.getTransceivers) {
+      pc.getTransceivers().forEach(transceiver => {
+        if (transceiver.receiver.playoutDelayHint !== undefined) {
+          transceiver.receiver.playoutDelayHint = 0;
+        }
+      });
+    }
+
     console.log("[v0] 📹 Adding local tracks to peer connection for", peerId)
     const localTracks = localStreamRef.current.getTracks()
     console.log("[v0] Local tracks available:", localTracks.length)
@@ -581,9 +590,10 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     if (count === 1) return "flex items-center justify-center h-full max-h-[calc(100vh-160px)]"
     return cn(
       "h-full grid gap-2 md:gap-4 auto-rows-fr max-h-[calc(100vh-160px)]",
-      count === 2 ? "grid-cols-2" : 
-      count <= 4 ? "grid-cols-2" : 
-      "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+      "grid-cols-2", // Always at least 2 columns on mobile if count > 1
+      count === 2 ? "md:grid-cols-2" : 
+      count <= 4 ? "md:grid-cols-2" : 
+      "md:grid-cols-3 lg:grid-cols-4"
     )
   }
 
@@ -726,7 +736,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             {/* Local video */}
             <Card className={cn(
               "relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg border-primary/10 w-full h-full object-contain",
-              totalParticipants === 1 ? "max-w-4xl aspect-video" : "aspect-video"
+              totalParticipants === 1 ? "max-w-4xl aspect-video" : "aspect-video md:aspect-auto"
             )}>
               <video
                 ref={localVideoRef}
@@ -754,7 +764,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             {Array.from(peers.values()).map((peer) => (
               <Card
                 key={peer.id}
-                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg border-primary/10 aspect-video w-full h-full object-contain"
+                className="relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-lg border-primary/10 aspect-video md:aspect-auto w-full h-full object-contain"
               >
                 {peer.stream && peer.stream.getTracks().length > 0 ? (
                   <video
