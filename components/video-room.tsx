@@ -107,22 +107,22 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     if (!isAuthenticated || !userName || !mounted || !hasSetUsername) return
 
     let isActive = true
+    const abortController = new AbortController();
 
     const initializeRoom = async () => {
       try {
-        const roomRes = await fetch(`/api/rooms?roomId=${roomId}`)
-        if (roomRes.ok) {
-          const roomData = await roomRes.json()
-          setRoomType(roomData.type || "video")
-          
-          if (roomData.type === "voice") {
-            setIsVideoEnabled(false)
-          }
+        const roomRes = await fetch(`/api/rooms?roomId=${roomId}`, { signal: abortController.signal })
+        if (!roomRes.ok) throw new Error("Failed to fetch room info");
+        const roomData = await roomRes.json()
+        setRoomType(roomData.type || "video")
+        
+        if (roomData.type === "voice") {
+          setIsVideoEnabled(false)
         }
 
         // Get local media
         const constraints = {
-          video: roomType === "voice" ? false : { width: 1280, height: 720 },
+          video: roomData.type === "voice" ? false : { width: 1280, height: 720 },
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         }
 
@@ -131,7 +131,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
           stream = await navigator.mediaDevices.getUserMedia(constraints)
         } catch (err) {
           console.error("Media error:", err)
-          if (roomType !== "voice" && err instanceof Error && (err.name === "NotFoundError" || err.name === "NotAllowedError")) {
+          if (roomData.type !== "voice" && err instanceof Error && (err.name === "NotFoundError" || err.name === "NotAllowedError")) {
             // Fallback to audio only if camera fails
             stream = await navigator.mediaDevices.getUserMedia({ audio: constraints.audio })
             setIsVideoEnabled(false)
@@ -161,11 +161,10 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             userId: userIdRef.current,
             data: { userName },
           }),
+          signal: abortController.signal
         })
 
         if (!joinRes.ok) throw new Error("Failed to join room")
-
-        const joinData = await joinRes.json()
 
         // Start polling for signals
         startPolling()
@@ -180,8 +179,10 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             userName,
             action: "join",
           }),
+          signal: abortController.signal
         })
       } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
         console.error("Error initializing room:", error)
         toast({
           title: "Connection Error",
@@ -195,6 +196,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
 
     return () => {
       isActive = false
+      abortController.abort();
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
       }
@@ -207,12 +209,13 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "leave", roomId, userId: userIdRef.current }),
-      })
+      }).catch(() => {}); // Ignore errors on leave
     }
   }, [isAuthenticated, userName, mounted, roomId, toast])
 
   useEffect(() => {
     const checkRoomOwnership = async () => {
+      if (!roomId || !userIdRef.current) return;
       try {
         const res = await fetch(`/api/rooms?roomId=${roomId}`)
         if (res.ok) {
@@ -226,10 +229,10 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
       }
     }
 
-    if (userIdRef.current) {
+    if (mounted && userIdRef.current) {
       checkRoomOwnership()
     }
-  }, [roomId])
+  }, [roomId, mounted])
 
   const startPolling = () => {
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
