@@ -891,12 +891,14 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
               </DialogHeader>
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <SettingsPanel
-                  onClose={() => {}}
                   onCaptionsChange={handleCaptionsChange}
                   isOwner={isOwner}
                   roomId={roomId}
                   roomType={roomType}
-                  onEndForAll={handleEndForAll}
+                  onEndForAll={(enabled) => {
+                    // This updates the logic used in handleEndCall
+                    localStorage.setItem(`room_${roomId}_endForAll`, enabled.toString())
+                  }}
                 />
               </div>
             </DialogContent>
