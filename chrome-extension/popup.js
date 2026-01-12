@@ -3,21 +3,38 @@ let baseUrl = "";
 
 chrome.storage.sync.get(["baseUrl"], (result) => {
   baseUrl = result.baseUrl || "https://thongphamit.site";
+  console.log("ConnectNow Extension: baseUrl initialized as", baseUrl);
 });
 
 function generateRoomId() {
-  return 'room-' + Math.random().toString(36).substr(2, 9);
+  const adjectives = ["quick", "happy", "bright", "smart", "cool"];
+  const nouns = ["meeting", "chat", "talk", "call", "sync"];
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const num = Math.floor(Math.random() * 1000);
+  return `${adj}-${noun}-${num}`;
 }
 
-document.getElementById("newMeeting")?.addEventListener("click", () => {
-  const roomId = generateRoomId();
-  const url = baseUrl ? `${baseUrl}/room/${roomId}` : `/room/${roomId}`;
-  chrome.tabs.create({ url });
-});
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("newMeeting")?.addEventListener("click", () => {
+    const roomId = generateRoomId();
+    const url = `${baseUrl}/room/${roomId}`;
+    console.log("Opening new meeting:", url);
+    chrome.tabs.create({ url });
+  });
 
-document.getElementById("joinMeeting")?.addEventListener("click", () => {
-  const roomCode = document.getElementById("roomCode").value.trim();
-  if (!roomCode) return;
-  const url = baseUrl ? `${baseUrl}/room/${roomCode}` : `/room/${roomCode}`;
-  chrome.tabs.create({ url });
+  document.getElementById("joinMeeting")?.addEventListener("click", () => {
+    const roomCode = document.getElementById("roomCode").value.trim();
+    if (!roomCode) {
+      const status = document.getElementById("status");
+      if (status) {
+        status.textContent = "Please enter a room code";
+        status.style.color = "#ef4444";
+      }
+      return;
+    }
+    const url = `${baseUrl}/room/${roomCode}`;
+    console.log("Joining meeting:", url);
+    chrome.tabs.create({ url });
+  });
 });
