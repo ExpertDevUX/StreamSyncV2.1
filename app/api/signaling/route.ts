@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon("postgresql://neondb_owner:npg_iTKPxIYwmv78@ep-red-glade-ahaxrhjw-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require")
+const sql = neon(process.env.DATABASE_URL!)
+
+export const runtime = 'edge'; // Use Edge Runtime for lower latency on Netlify/Vercel
+export const preferredRegion = 'auto';
 
 export async function POST(request: Request) {
   try {
