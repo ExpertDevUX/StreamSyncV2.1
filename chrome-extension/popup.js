@@ -2,7 +2,7 @@ const chrome = window.chrome;
 let baseUrl = "";
 
 chrome.storage.sync.get(["baseUrl"], (result) => {
-  baseUrl = result.baseUrl || "https://" + window.location.hostname;
+  baseUrl = result.baseUrl || "https://thongphamit.site";
 });
 
 function generateRoomId() {

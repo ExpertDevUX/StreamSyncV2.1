@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ConnectNow - Video Meetings",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Quick access to ConnectNow video meetings with chat, screen sharing, and rooms.",
   "permissions": ["activeTab", "storage", "tabs", "notifications"],
   "action": {
@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.replit.dev/*", "*://*.replit.app/*", "*://*.vercel.app/*", "http://localhost:*/*"],
+      "matches": ["*://thongphamit.site/*"],
       "js": ["content.js"],
       "run_at": "document_end"
     }
@@ -27,5 +27,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "host_permissions": ["*://*.replit.dev/*", "*://*.replit.app/*", "*://*.vercel.app/*"]
+  "host_permissions": ["*://thongphamit.site/*"]
 }
