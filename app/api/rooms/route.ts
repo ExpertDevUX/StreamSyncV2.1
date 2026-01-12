@@ -2,11 +2,16 @@ import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export async function POST(request: Request) {
   try {
     const { id, name, password, userId, type } = await request.json()
+    const sql = getSql();
 
     let passwordHash = null
     if (password) {
@@ -34,6 +39,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Room ID required" }, { status: 400 })
     }
 
+    const sql = getSql();
     const result = await sql`
       SELECT id, name, password_hash, created_at, is_active, expires_at, created_by
       FROM rooms
@@ -63,6 +69,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const { id, type } = await request.json()
+    const sql = getSql();
     await sql`
       UPDATE rooms 
       SET type = ${type}

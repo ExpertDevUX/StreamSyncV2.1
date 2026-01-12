@@ -2,11 +2,16 @@ import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export async function POST(request: Request) {
   try {
     const { roomId, password } = await request.json()
+    const sql = getSql();
 
     const result = await sql`
       SELECT password_hash FROM rooms WHERE id = ${roomId} AND is_active = true

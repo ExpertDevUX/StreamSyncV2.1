@@ -1,7 +1,11 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export async function GET(request: Request) {
   try {
@@ -12,6 +16,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Room ID required" }, { status: 400 })
     }
 
+    const sql = getSql();
     const messages = await sql`
       SELECT id, username, content, timestamp
       FROM messages
@@ -35,6 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
+    const sql = getSql();
     const result = await sql`
       INSERT INTO messages (room_id, username, content)
       VALUES (${roomId}, ${userName}, ${message})

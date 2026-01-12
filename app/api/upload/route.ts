@@ -1,7 +1,11 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +13,7 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File
     const roomId = formData.get("roomId") as string
     const userName = formData.get("userName") as string
+    const sql = getSql();
 
     if (!file || !roomId || !userName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })

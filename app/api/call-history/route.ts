@@ -1,11 +1,16 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon("postgresql://neondb_owner:npg_iTKPxIYwmv78@ep-red-glade-ahaxrhjw-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require")
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export async function POST(request: Request) {
   try {
     const { roomId, userId, userName, action } = await request.json()
+    const sql = getSql();
 
     if (action === "join") {
       await sql`
@@ -40,6 +45,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const roomId = searchParams.get("roomId")
+    const sql = getSql();
 
     if (!roomId) {
       return NextResponse.json({ error: "Room ID required" }, { status: 400 })

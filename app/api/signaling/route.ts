@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getSql() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return neon(url);
+}
 
 export const runtime = 'edge'; // Use Edge Runtime for lower latency on Netlify/Vercel
 export const preferredRegion = 'auto';
@@ -10,6 +14,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { type, roomId, userId, targetId, data } = body
+    const sql = getSql();
 
     console.log("[v0] Signaling POST:", { type, roomId, userId, targetId })
 
@@ -165,6 +170,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const roomId = searchParams.get("roomId")
+    const sql = getSql();
 
     if (!roomId) {
       return NextResponse.json({ error: "Missing roomId" }, { status: 400 })
