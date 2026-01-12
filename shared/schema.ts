@@ -21,6 +21,17 @@ export const room_participants = pgTable("room_participants", {
   last_seen: timestamp("last_seen").defaultNow()
 });
 
+export const signaling_messages = pgTable("signaling_messages", {
+  id: serial("id").primaryKey(),
+  room_id: text("room_id").notNull(),
+  from_user_id: text("from_user_id").notNull(),
+  to_user_id: text("to_user_id").notNull(), // 'all' for broadcast
+  message_type: text("message_type").notNull(), // 'signal', 'kick_all'
+  message_data: text("message_data").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  consumed: boolean("consumed").default(false),
+});
+
 export const callHistory = pgTable("call_history", {
   id: serial("id").primaryKey(),
   room_id: text("room_id").notNull(),

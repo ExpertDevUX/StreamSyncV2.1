@@ -31,12 +31,15 @@ export async function POST(request: Request) {
           DO UPDATE SET last_seen = NOW(), user_name = ${data.userName}
         `
 
+        // Delete old messages for this user to ensure fresh signaling
+        await sql`DELETE FROM signaling_messages WHERE room_id = ${roomId} AND to_user_id = ${userId}`
+
         const participants = await sql`
           SELECT user_id, user_name 
           FROM room_participants 
           WHERE room_id = ${roomId} 
             AND user_id != ${userId}
-            AND last_seen > NOW() - INTERVAL '20 seconds'
+            AND last_seen > NOW() - INTERVAL '30 seconds'
           ORDER BY user_id
         `
 
@@ -115,7 +118,7 @@ export async function POST(request: Request) {
           FROM room_participants 
           WHERE room_id = ${roomId} 
             AND user_id != ${userId}
-            AND last_seen > NOW() - INTERVAL '20 seconds'
+            AND last_seen > NOW() - INTERVAL '30 seconds'
           ORDER BY user_id
         `
 

@@ -238,6 +238,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
 
     const poll = async () => {
+      if (!isActive) return
       try {
         const res = await fetch("/api/signaling", {
           method: "POST",
@@ -248,6 +249,7 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
             userId: userIdRef.current,
             data: { userName },
           }),
+          signal: abortController.signal
         })
 
         if (!res.ok) return
@@ -289,12 +291,14 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         }
 
         // Handle signals
-        if (data.signals) {
+        if (data.signals && data.signals.length > 0) {
+          console.log("[v0] 📩 Received signals:", data.signals.length)
           for (const signal of data.signals) {
             await handleSignal(signal.from, signal.signal)
           }
         }
       } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
         console.error("Polling error:", error)
       }
     }
@@ -372,6 +376,8 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         sendSignal(peerId, { type: "candidate", candidate: event.candidate })
       } else {
         console.log("[v0] 🧊 ICE gathering complete for", peerId)
+        // Send a null candidate to signal end of gathering if needed
+        sendSignal(peerId, { type: "candidate", candidate: null })
       }
     }
 
