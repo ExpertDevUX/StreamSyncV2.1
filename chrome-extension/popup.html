@@ -3,29 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 300px; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #fff; }
-    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: #2563eb; }
-    .header h2 { margin: 0; font-size: 18px; }
-    .btn { display: block; width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: center; margin-bottom: 10px; }
-    .btn:hover { background: #1d4ed8; }
-    .input-group { margin-bottom: 15px; }
-    .input-group label { display: block; font-size: 12px; margin-bottom: 4px; color: #666; }
-    input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    .status { font-size: 11px; margin-top: 10px; text-align: center; color: #666; }
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #10b981;
+      --bg: #ffffff;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    body { 
+      width: 320px; 
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      padding: 20px;
+    }
+    .header { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .header h2 { 
+      margin: 0; 
+      font-size: 20px; 
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--primary);
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+    .btn { 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%; 
+      padding: 12px; 
+      background: var(--primary); 
+      color: #fff; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 14px; 
+      font-weight: 600;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .btn:hover { 
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .btn-secondary {
+      background: var(--success);
+    }
+    .btn-secondary:hover {
+      background: #059669;
+    }
+    .input-group { 
+      margin-bottom: 16px; 
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .input-group label { 
+      display: block; 
+      font-size: 11px; 
+      font-weight: 600;
+      margin-bottom: 6px; 
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    input { 
+      width: 100%; 
+      padding: 10px; 
+      border: 1px solid var(--border); 
+      border-radius: 6px; 
+      box-sizing: border-box; 
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+      ring: 2px solid var(--primary);
+    }
+    .status { 
+      font-size: 12px; 
+      margin-top: 16px; 
+      text-align: center; 
+      color: var(--text-muted);
+      padding: 8px;
+      background: #f3f4f6;
+      border-radius: 6px;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 11px;
+      text-align: center;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <img src="icons/icon16.png" alt="logo">
-    <h2>ConnectNow</h2>
+  <div class="container">
+    <div class="header">
+      <img src="icons/icon48.png" alt="logo">
+      <h2>ConnectNow</h2>
+    </div>
+    
+    <div class="section-title">Quick Actions</div>
+    <button class="btn" id="newMeeting">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+      New Instant Meeting
+    </button>
+    
+    <div style="margin: 20px 0; border-top: 1px solid var(--border); position: relative;">
+      <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; font-size: 11px; color: var(--text-muted);">OR</span>
+    </div>
+
+    <div class="section-title">Join Existing</div>
+    <div class="input-group">
+      <label for="roomCode">Room Identifier</label>
+      <input type="text" id="roomCode" placeholder="e.g. happy-meeting-123" spellcheck="false">
+    </div>
+    <button class="btn btn-secondary" id="joinMeeting">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"></path></svg>
+      Join Meeting
+    </button>
+    
+    <div id="status" class="status">Ready to connect</div>
+    
+    <div class="footer">
+      Connected to your workspace
+    </div>
   </div>
-  <button class="btn" id="newMeeting">New Instant Meeting</button>
-  <div class="input-group">
-    <label>Room Code</label>
-    <input type="text" id="roomCode" placeholder="Enter room ID...">
-  </div>
-  <button class="btn" id="joinMeeting" style="background: #10b981;">Join Meeting</button>
-  <div id="status" class="status">Extension Ready</div>
   <script src="popup.js"></script>
 </body>
 </html>
