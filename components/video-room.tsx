@@ -109,6 +109,79 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     let isActive = true
     const abortController = new AbortController();
 
+    const startPolling = () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
+
+      const poll = async () => {
+        if (!isActive) return
+        try {
+          const res = await fetch("/api/signaling", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "heartbeat",
+              roomId,
+              userId: userIdRef.current,
+              data: { userName },
+            }),
+            signal: abortController.signal
+          })
+
+          if (!res.ok) return
+
+          const data = await res.json()
+
+          if (data.kicked) {
+            toast({
+              title: "Meeting Ended",
+              description: "The host has ended the meeting for all participants",
+              variant: "destructive",
+            })
+            router.push("/")
+            return
+          }
+
+          // Handle participants
+          if (data.participants) {
+            setParticipantCount(data.participants.length + 1)
+
+            // Connect to new participants
+            for (const participant of data.participants) {
+              if (!peersRef.current.has(participant.userId)) {
+                console.log("[v0] 🆕 New participant detected:", participant.userId, participant.userName)
+                await createPeerConnection(participant.userId, participant.userName, true)
+              }
+            }
+
+            // Remove disconnected participants
+            const activeIds = new Set(data.participants.map((p: any) => p.userId))
+            for (const [peerId, peer] of peersRef.current) {
+              if (!activeIds.has(peerId)) {
+                console.log("[v0] ❌ Participant disconnected:", peerId)
+                peer.connection.close()
+                peersRef.current.delete(peerId)
+                setPeers(new Map(peersRef.current))
+              }
+            }
+          }
+
+          // Handle signals
+          if (data.signals && data.signals.length > 0) {
+            console.log("[v0] 📩 Received signals:", data.signals.length)
+            for (const signal of data.signals) {
+              await handleSignal(signal.from, signal.signal)
+            }
+          }
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') return;
+          console.error("Polling error:", error)
+        }
+      }
+
+      poll()
+      pollingIntervalRef.current = setInterval(poll, 2000)
+    }
+
     const initializeRoom = async () => {
       try {
         const roomRes = await fetch(`/api/rooms?roomId=${roomId}`, { signal: abortController.signal })
@@ -234,77 +307,8 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
     }
   }, [roomId, mounted])
 
-  const startPolling = () => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
-
-    const poll = async () => {
-      if (!isActive) return
-      try {
-        const res = await fetch("/api/signaling", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "heartbeat",
-            roomId,
-            userId: userIdRef.current,
-            data: { userName },
-          }),
-          signal: abortController.signal
-        })
-
-        if (!res.ok) return
-
-        const data = await res.json()
-
-        if (data.kicked) {
-          toast({
-            title: "Meeting Ended",
-            description: "The host has ended the meeting for all participants",
-            variant: "destructive",
-          })
-          router.push("/")
-          return
-        }
-
-        // Handle participants
-        if (data.participants) {
-          setParticipantCount(data.participants.length + 1)
-
-          // Connect to new participants
-          for (const participant of data.participants) {
-            if (!peersRef.current.has(participant.userId)) {
-              console.log("[v0] 🆕 New participant detected:", participant.userId, participant.userName)
-              await createPeerConnection(participant.userId, participant.userName, true)
-            }
-          }
-
-          // Remove disconnected participants
-          const activeIds = new Set(data.participants.map((p: any) => p.userId))
-          for (const [peerId, peer] of peersRef.current) {
-            if (!activeIds.has(peerId)) {
-              console.log("[v0] ❌ Participant disconnected:", peerId)
-              peer.connection.close()
-              peersRef.current.delete(peerId)
-              setPeers(new Map(peersRef.current))
-            }
-          }
-        }
-
-        // Handle signals
-        if (data.signals && data.signals.length > 0) {
-          console.log("[v0] 📩 Received signals:", data.signals.length)
-          for (const signal of data.signals) {
-            await handleSignal(signal.from, signal.signal)
-          }
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return;
-        console.error("Polling error:", error)
-      }
-    }
-
-    poll()
-    pollingIntervalRef.current = setInterval(poll, 2000)
+  const startPollingPlaceholder = () => {
+    // This is a placeholder, actual startPolling is defined inside useEffect
   }
 
   const createPeerConnection = async (peerId: string, peerName: string, initiator: boolean) => {
@@ -449,7 +453,9 @@ export function VideoRoom({ roomId }: VideoRoomProps) {
         await pc.setRemoteDescription(new RTCSessionDescription(signal.answer))
       } else if (signal.type === "candidate") {
         console.log("[v0] Adding ICE candidate from", fromId)
-        await pc.addIceCandidate(new RTCIceCandidate(signal.candidate))
+        if (signal.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(signal.candidate))
+        }
       }
     } catch (error) {
       console.error("[v0] Error handling signal from", fromId, error)
