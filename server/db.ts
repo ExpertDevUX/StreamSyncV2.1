@@ -4,7 +4,21 @@ import * as schema from "../shared/schema";
 
 const { Pool } = pg;
 
-const DATABASE_URL = "postgresql://neondb_owner:npg_iTKPxIYwmv78@ep-red-glade-ahaxrhjw-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+export function getDb() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    console.warn("DATABASE_URL is not set. Database initialization skipped for build.");
+    // Return a dummy object or throw if needed. 
+    // For Next.js build, throwing can be okay if the route is dynamic.
+    throw new Error("DATABASE_URL is not set");
+  }
+  const pool = new Pool({ connectionString: url });
+  return drizzle(pool, { schema });
+}
 
-export const pool = new Pool({ connectionString: DATABASE_URL });
-export const db = drizzle(pool, { schema });
+// Lazy-loaded proxy for backward compatibility
+export const db = new Proxy({} as any, {
+  get(target, prop) {
+    return (getDb() as any)[prop];
+  }
+});
